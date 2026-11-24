@@ -4,6 +4,7 @@ public class Neuron
 {
     public float[] _Weights;
     public float _Bias;
+    public NeuronVizualizer visual;
 
     public float GetOutput(float[] input)
     {
@@ -12,7 +13,20 @@ public class Neuron
         {
             result += input[i] * _Weights[i];
         }
-        return result + _Bias;
+
+        result = (float)System.Math.Tanh(result + _Bias);
+
+        if(visual != null)
+        {
+            visual.SetColor(result);
+        }
+        
+        return result;
+    }
+
+    public void SetVisualizer(NeuronVizualizer vizualizer)
+    {
+     visual = vizualizer;
     }
 
     public void InitializeWeights(int inputCount)
@@ -21,9 +35,9 @@ public class Neuron
         
         for (int i = 0; i < inputCount; i++)
         {
-            _Weights[i] = UnityEngine.Random.Range(-1f, 1f);
+            _Weights[i] = UnityEngine.Random.Range(-0.3f, 0.3f);
         }
-        _Bias = UnityEngine.Random.Range(-1f, 1f);
+        _Bias = UnityEngine.Random.Range(-0.3f, 0.3f);
     }
 
     public void SetWeights(float[] weights, float bias)

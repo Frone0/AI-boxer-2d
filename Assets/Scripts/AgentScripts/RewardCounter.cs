@@ -6,7 +6,9 @@ public class RewardCounter : MonoBehaviour
     [SerializeField] private GenerationManager _GenerationManager;
     [SerializeField] AIBrain _AIBrain;
     [SerializeField] GameObject _Body;
+    [SerializeField] GameObject _Head;
     public float _Reward = 0f;
+    [SerializeField] float RewardFromHeadUp;
     bool _ReachedTheFinish;
     float time = 0f;
 
@@ -23,17 +25,27 @@ public class RewardCounter : MonoBehaviour
 
     void Update()
     {
-       time += Time.deltaTime;
+        time += Time.deltaTime;
 
-       if(time > 15f)
-       {
-           _AIBrain.Died();
-       }
+        if(_Head.transform.position.y > 0f)
+        {
+            RewardFromHeadUp += 200f * Time.deltaTime;
+        }
+       else
+        {
+            RewardFromHeadUp -= 100f * Time.deltaTime;
+        }
+
+        if(time > 15f)
+        {
+            _AIBrain.Died();
+        }
     }
 
     public void TouchedTheFinish()
     {
          SetReward(); 
+         _ReachedTheFinish = true;
         _AIBrain.Died();
     }
 
@@ -42,6 +54,6 @@ public class RewardCounter : MonoBehaviour
         float distance = Math.Abs(finish.transform.position.x - _Body.transform.position.x);
 
         float RewardFromDistance = (MaxDistanceToFinish - distance) * 10;
-        _Reward = time + RewardFromDistance + (_ReachedTheFinish ? 1000 : 0);
+        _Reward = RewardFromDistance + (_ReachedTheFinish ? (3000 - time * 80) : 0) + RewardFromHeadUp;
     }
 }

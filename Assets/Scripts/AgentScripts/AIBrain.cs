@@ -76,7 +76,7 @@ public class AIBrain : MonoBehaviour
     
        for(int i = 0; i < _Neurons[LayerIndex].Length; i++)
        {
-       outputs[i] = TanhActivation(_Neurons[LayerIndex][i].GetOutput(input));
+       outputs[i] = _Neurons[LayerIndex][i].GetOutput(input);
        }       
 
        if(LayerIndex != _Neurons.Length - 1)

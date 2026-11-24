@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
+[Serializable]
 public class AgentResult
 {
     public float Reward;
@@ -16,6 +18,7 @@ public class GenerationManager : MonoBehaviour
 {
 
     [SerializeField] int _CurrentGeneration = 0;
+    [SerializeField] SettingTheNetwork settingTheNetwork;
     [SerializeField]int _CountOfAliveAgents = 0;
     [SerializeField] int _AgentsPerGeneration = 50;
     [SerializeField] private GameObject _AgentPrefab;
@@ -25,6 +28,8 @@ public class GenerationManager : MonoBehaviour
     public GameObject Finish;
 
     public List<AgentResult> results = new List<AgentResult>();
+
+    public AgentResult AllTimeBest;
 
     void Awake()
     {
@@ -42,36 +47,44 @@ public class GenerationManager : MonoBehaviour
         {
             GameObject newAgent = Instantiate(_AgentPrefab, transform.position, Quaternion.identity);
              AIBrain brain = newAgent.GetComponent<AIBrain>();
+             MutationsTypes typeOfMutation = MutationsTypes.ExactlySame;
             if(_CurrentGeneration > 0)
             {
                if(i < 5)
                {
-                   brain.SetNeurons(GetAmountByMutation(MutationsTypes.ExactlySame),results[0].Neirons);
+                 typeOfMutation = MutationsTypes.ExactlySame;
                }
                else if(i < 20)
                {
-                   brain.SetNeurons(GetAmountByMutation(MutationsTypes.LittleMutation),results[0].Neirons); 
+                  typeOfMutation = MutationsTypes.LittleMutation;
                }
                else if(i < 30)
                {
-                   brain.SetNeurons(GetAmountByMutation(MutationsTypes.MidMutation),results[0].Neirons); 
+                  typeOfMutation = MutationsTypes.MidMutation;
                }
                 else if(i < 35)
                {
-                   brain.SetNeurons(GetAmountByMutation(MutationsTypes.MidMutation),results[0].Neirons); 
+                    typeOfMutation = MutationsTypes.StrongMutation;
                }
                else
                {
                    brain.SetRandomNeurons();
                }
+
+                brain.SetNeurons(GetAmountByMutation(MutationsTypes.MidMutation),results[0].Neirons);
             }
             else
             {
                 brain.SetRandomNeurons();
             }
 
+            if(i == 1)
+            {
+                settingTheNetwork.SetBrainForVisualization(brain,newAgent.GetComponent<InputsControl>());
+            }
 
-            newAgent.name = "Agent_" + _CurrentGeneration + "_" + i;
+
+            newAgent.name = "Agent_" + _CurrentGeneration + "_" + i + "_" + GetMutationName(typeOfMutation);
             _CountOfAliveAgents++;
         }
 
@@ -79,20 +92,38 @@ public class GenerationManager : MonoBehaviour
         _CurrentGeneration++;
 
         results.Clear();
+        UpdateUi();
     }
 
    float GetAmountByMutation(MutationsTypes type) => type switch
 {
     MutationsTypes.ExactlySame => 0f,
-    MutationsTypes.LittleMutation => 0.1f,
-    MutationsTypes.MidMutation => 0.25f,
-    MutationsTypes.StrongMutation => 0.4f,
+    MutationsTypes.LittleMutation => 0.05f,
+    MutationsTypes.MidMutation => 0.1f,
+    MutationsTypes.StrongMutation => 0.15f,
     _ => 0f
 };
+
+    string GetMutationName(MutationsTypes type) => type switch
+    {
+         MutationsTypes.ExactlySame => "PreviusLeader",
+         MutationsTypes.LittleMutation => "LittleMut",
+         MutationsTypes.MidMutation => "MidMut",
+         MutationsTypes.StrongMutation => "StrongMut",
+         _ => "Null"
+    };
 
     public void GenIsOver()
     {
         SortResults();
+
+        if(results[0].Reward > AllTimeBest.Reward)
+        {
+            AllTimeBest = results[0];
+        }
+        
+
+
         StartNewGeneration();
     }
 
@@ -128,6 +159,11 @@ public class GenerationManager : MonoBehaviour
         }
 
         return CopyNeirons;
+    }
+
+    void UpdateUi()
+    {
+        UIManager.Instance.SetGenNumber(_CurrentGeneration);
     }
     
 }
