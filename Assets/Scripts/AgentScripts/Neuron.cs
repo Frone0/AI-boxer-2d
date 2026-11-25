@@ -63,7 +63,6 @@ public class Neuron
     {
         _Weights = (float[])neuron._Weights.Clone();
         _Bias = neuron._Bias;
-
     }
 
     public void Mutate(float Amount)
@@ -72,5 +71,7 @@ public class Neuron
         {
            _Weights[i] += Random.Range(-Amount,Amount); 
         }
+
+        _Bias  += Random.Range(-Amount,Amount);  
     }
 }

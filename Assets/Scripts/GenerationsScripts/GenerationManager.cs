@@ -11,7 +11,7 @@ public class AgentResult
 
 public enum MutationsTypes
 {
-    ExactlySame,LittleMutation,MidMutation,StrongMutation
+    ExactlySame,LittleMutation,MidMutation,StrongMutation,AllTimeBest
 }
 
 public class GenerationManager : MonoBehaviour
@@ -31,6 +31,8 @@ public class GenerationManager : MonoBehaviour
 
     public AgentResult AllTimeBest;
 
+    public bool TestModeForNextGen;
+
     void Awake()
     {
         Instance = this;
@@ -42,67 +44,69 @@ public class GenerationManager : MonoBehaviour
     }
 
     public void StartNewGeneration()
-    { 
+    {   
         for(int i = 0; i < _AgentsPerGeneration; i++)
         {
-            GameObject newAgent = Instantiate(_AgentPrefab, transform.position, Quaternion.identity);
+             GameObject newAgent = SpawnAgent();
              AIBrain brain = newAgent.GetComponent<AIBrain>();
              MutationsTypes typeOfMutation = MutationsTypes.ExactlySame;
-            if(_CurrentGeneration > 0)
+           
+            if(i >= 35 || _CurrentGeneration == 0)
             {
-               if(i < 5)
-               {
-                 typeOfMutation = MutationsTypes.ExactlySame;
-               }
-               else if(i < 20)
-               {
-                  typeOfMutation = MutationsTypes.LittleMutation;
-               }
-               else if(i < 30)
-               {
-                  typeOfMutation = MutationsTypes.MidMutation;
-               }
-                else if(i < 35)
-               {
-                    typeOfMutation = MutationsTypes.StrongMutation;
-               }
-               else
-               {
-                   brain.SetRandomNeurons();
-               }
-
-                brain.SetNeurons(GetAmountByMutation(MutationsTypes.MidMutation),results[0].Neirons);
+              brain.SetRandomNeurons();
             }
             else
             {
-                brain.SetRandomNeurons();
+              typeOfMutation =  GetMutationsTypeByID(i);
+              brain.SetNeurons(GetAmountByMutation(typeOfMutation),typeOfMutation == MutationsTypes.AllTimeBest ? AllTimeBest.Neirons : results[0].Neirons);
             }
 
             if(i == 1)
             {
-                settingTheNetwork.SetBrainForVisualization(brain,newAgent.GetComponent<InputsControl>());
+              SetAgentForVizualization(brain);
+              brain.DebugData = true;
             }
 
-
             newAgent.name = "Agent_" + _CurrentGeneration + "_" + i + "_" + GetMutationName(typeOfMutation);
-            _CountOfAliveAgents++;
         }
 
-
         _CurrentGeneration++;
-
         results.Clear();
         UpdateUi();
     }
 
+    GameObject SpawnAgent()
+    {
+        _CountOfAliveAgents++;
+        return Instantiate(_AgentPrefab, transform.position, Quaternion.identity);
+    }
+
+    void SetAgentForVizualization(AIBrain brain)
+    {
+        settingTheNetwork.SetBrainForVisualization(brain,brain._InputsControl);
+    }
+
+    void StartTestMode()
+    {
+            GameObject newAgent = SpawnAgent();
+            AIBrain brain = newAgent.GetComponent<AIBrain>();
+            brain.DebugData = true;
+            brain.SetNeurons(GetAmountByMutation(MutationsTypes.ExactlySame),AllTimeBest.Neirons);
+
+            SetAgentForVizualization(brain);
+
+            TestModeForNextGen = false;
+    }
+
    float GetAmountByMutation(MutationsTypes type) => type switch
-{
+    {
     MutationsTypes.ExactlySame => 0f,
     MutationsTypes.LittleMutation => 0.05f,
     MutationsTypes.MidMutation => 0.1f,
     MutationsTypes.StrongMutation => 0.15f,
+    MutationsTypes.AllTimeBest => 0f,
     _ => 0f
-};
+    };
 
     string GetMutationName(MutationsTypes type) => type switch
     {
@@ -110,20 +114,37 @@ public class GenerationManager : MonoBehaviour
          MutationsTypes.LittleMutation => "LittleMut",
          MutationsTypes.MidMutation => "MidMut",
          MutationsTypes.StrongMutation => "StrongMut",
+         MutationsTypes.AllTimeBest => "AllTimeBest",
          _ => "Null"
     };
 
+    MutationsTypes GetMutationsTypeByID(int i)
+    {
+       MutationsTypes type = MutationsTypes.AllTimeBest;
+
+       type = i < 3 ? MutationsTypes.AllTimeBest :
+        i < 5 ? MutationsTypes.ExactlySame :
+        i < 15 ? MutationsTypes.LittleMutation : 
+        i < 25 ? MutationsTypes.MidMutation : 
+        i < 35 ? MutationsTypes.StrongMutation : 
+        MutationsTypes.ExactlySame;
+
+        return type;
+    }
+
     public void GenIsOver()
     {
-        SortResults();
+       SortResults();
 
-        if(results[0].Reward > AllTimeBest.Reward)
+       if (AllTimeBest == null || AllTimeBest.Neirons == null || results[0].Reward > AllTimeBest.Reward)
+           AllTimeBest = results[0];
+        
+       if(TestModeForNextGen)
         {
-            AllTimeBest = results[0];
+            StartTestMode();
+            return;
         }
         
-
-
         StartNewGeneration();
     }
 
@@ -135,7 +156,6 @@ public class GenerationManager : MonoBehaviour
     public void AgentDied(float reward,AIBrain brain)
     {
         results.Add( new AgentResult{Reward = reward, Neirons =  GetNeironsFromBrain(brain)});
-
         _CountOfAliveAgents--;
 
         if(_CountOfAliveAgents <= 0)
@@ -146,9 +166,9 @@ public class GenerationManager : MonoBehaviour
 
     public Neuron[][] GetNeironsFromBrain(AIBrain brain)
     {
-        Neuron[][] CopyNeirons = new Neuron[brain.NeironsPerLayer.Length][];
+        Neuron[][] CopyNeirons = new Neuron[brain.networkData.NeironsPerLayer.Length][];
 
-        for(int i = 0; i < brain.NeironsPerLayer.Length; i++)
+        for(int i = 0; i < brain.networkData.NeironsPerLayer.Length; i++)
         {
             CopyNeirons[i] = new Neuron[brain._Neurons[i].Length];
 
@@ -165,5 +185,4 @@ public class GenerationManager : MonoBehaviour
     {
         UIManager.Instance.SetGenNumber(_CurrentGeneration);
     }
-    
 }

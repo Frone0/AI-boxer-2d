@@ -4,34 +4,39 @@ using UnityEngine;
 public class AIBrain : MonoBehaviour
 {  
     [Header("Links")]
-    [SerializeField] private InputsControl _InputsControl;
+    [SerializeField] public InputsControl _InputsControl;
     [SerializeField] private BodyPartsControl _BodyPartsControl;
     [SerializeField] private BodyPartsContainer _BodyPartsContainer;
     [SerializeField] public RewardCounter _RewardCounter;
     [SerializeField] private GenerationManager _GenerationManager;
 
+    bool died;
+
+    public bool DebugData;
+
     [Header("Neurons Settings")]
     //Neirons
     public Neuron[][] _Neurons;
-    public int[] NeironsPerLayer;
+
+    public NetworkData networkData;
 
     public void SetRandomNeurons()
     {
-        _Neurons = new Neuron[NeironsPerLayer.Length][];
+        _Neurons = new Neuron[networkData.NeironsPerLayer.Length][];
 
-        NeironsPerLayer[NeironsPerLayer.Length - 1] = _BodyPartsContainer._BodyParts.Length;
+        networkData.NeironsPerLayer[networkData.NeironsPerLayer.Length - 1] = _BodyPartsContainer._BodyParts.Length;
         
-        for (int i = 0; i < NeironsPerLayer.Length; i++)
+        for (int i = 0; i < networkData.NeironsPerLayer.Length; i++)
         {
-            _Neurons[i] = new Neuron[NeironsPerLayer[i]];
+            _Neurons[i] = new Neuron[networkData.NeironsPerLayer[i]];
         }
 
-        for (int i = 0; i < NeironsPerLayer.Length; i++)
+        for (int i = 0; i < networkData.NeironsPerLayer.Length; i++)
         {
             for (int j = 0; j < _Neurons[i].Length; j++)
             {
                 _Neurons[i][j] = new Neuron();
-                int WeightsCount = (i == 0) ? _InputsControl._Inputs.Length : NeironsPerLayer[i - 1];
+                int WeightsCount = (i == 0) ? _InputsControl._Inputs.Length : networkData.NeironsPerLayer[i - 1];
                 _Neurons[i][j].InitializeWeights(WeightsCount);
             }
         }
@@ -58,6 +63,8 @@ public class AIBrain : MonoBehaviour
 
     public void Died()
     {
+        if(died) return;
+        died = true;
         _RewardCounter.SetReward();
         GenerationManager.Instance.AgentDied(_RewardCounter._Reward,this);
         Destroy(gameObject);
@@ -92,5 +99,10 @@ public class AIBrain : MonoBehaviour
     public void SetOutput(float[] output)
     {
         _BodyPartsControl.Apply(output);
+    }
+    
+    public void Destroy()
+    {
+        Destroy(gameObject);
     }
 }

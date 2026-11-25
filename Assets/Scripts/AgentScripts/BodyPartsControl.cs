@@ -6,7 +6,7 @@ public class BodyPartsControl : MonoBehaviour
 
     [SerializeField] float _Gain = 10f;
     [SerializeField] float _MaxMotorSpeed = 400f;
-    [SerializeField] float _MotorForce = 1000f;
+    [SerializeField] float _MotorForce = 1500f;
 
     public void Apply(float[] outputs)
     {
