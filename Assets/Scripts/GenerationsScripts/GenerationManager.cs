@@ -23,6 +23,8 @@ public class GenerationManager : MonoBehaviour
     [SerializeField] int _AgentsPerGeneration = 50;
     [SerializeField] private GameObject _AgentPrefab;
 
+    [SerializeField] SavingSystem savingSystem;
+
     public static GenerationManager Instance;
 
     public GameObject Finish;
@@ -38,8 +40,11 @@ public class GenerationManager : MonoBehaviour
         Instance = this;
     }
 
-    void Start()
+    public void LoadSaving()
     {
+        AllTimeBest = savingSystem.LoadAllTimeBest();
+        _CurrentGeneration = 1;
+        results.Add(AllTimeBest);
         StartNewGeneration();
     }
 

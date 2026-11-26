@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31ccf66f916146b4d8638efb7d26b05d, type: 3}
   m_Name: NetworkData
   m_EditorClassIdentifier: Assembly-CSharp::NetworkData
-  NeironsPerLayer: 
+  NeironsPerLayer: 100000000b000000

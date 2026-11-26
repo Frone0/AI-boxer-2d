@@ -12,6 +12,8 @@ public class RewardCounter : MonoBehaviour
     public float _Reward = 0f;
     [SerializeField] float RewardFromHeadUp;
     [SerializeField] float RewardFromFeet;
+
+    float RewardFromHitting;
     float rewardFortime;
     bool _ReachedTheFinish;
     float time = 0f;

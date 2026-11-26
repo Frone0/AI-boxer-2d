@@ -69,9 +69,9 @@ public class Neuron
     {
         for(int i = 0; i < _Weights.Length;i++)
         {
-           _Weights[i] += Random.Range(-Amount,Amount); 
+           _Weights[i] += UnityEngine.Random.Range(-Amount,Amount); 
         }
 
-        _Bias  += Random.Range(-Amount,Amount);  
+        _Bias  += UnityEngine.Random.Range(-Amount,Amount);  
     }
 }
